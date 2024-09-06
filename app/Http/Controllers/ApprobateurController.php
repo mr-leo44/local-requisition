@@ -62,17 +62,18 @@ class ApprobateurController extends Controller
 
     private function checkApproverInAPI($name, $email)
     {
-        $response = Http::get('http://10.143.41.70:8000/promo2/odcapi/?method=getUsers');
-        if ($response->successful()) {
-            $data = $response->json();
-            if ($data['success']) {
-                $users = $data['users'];
+        $users = User::all();
+        // $response = Http::get('http://10.143.41.70:8000/promo2/odcapi/?method=getUsers');
+        if ($users) {
+            // $data = $response->json();
+            // if ($data['success']) {
+                // $users = $data['users'];
                 foreach ($users as $user) {
-                    if ($user['first_name'] . ' ' . $user['last_name'] === $name && $user['email'] === $email) {
+                    if ($user->name === $name && $user->email === $email) {
                         return true;
                     }
                 }
-            }
+            // }
         }
         return false;
     }

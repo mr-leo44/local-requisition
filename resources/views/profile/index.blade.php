@@ -18,7 +18,7 @@
                     <ul class="mt-2 text-gray-700 dark:text-white">
                         <li class="flex border-y dark:border-gray-600 py-2">
                             <span class="font-bold w-24">Username :</span>
-                            <span class="text-gray-700 dark:text-white">{{ session()->get('user') }}</span>
+                            <span class="text-gray-700 dark:text-white">{{ session()->get('authUser')->name }}</span>
                         </li>
                         <li class="flex border-b dark:border-gray-600 py-2">
                             <span class="font-bold w-24">Direction :</span>

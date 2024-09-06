@@ -40,6 +40,13 @@
                 <p class="mt-4 text-base text-gray-700">Please complete your profile</p>
                 <form action="{{ route('register') }}" method="POST">
                     @csrf
+                    <div class="mt-4" id="name">
+                        <label for="name" class="font-bold">Votre nom :</label>
+                        <input type="text" name="name" id="name" class="border-gray-500 bg-transparent block w-full px-5 py-3 text-base text-black placeholder-gray-300 transition duration-500 ease-in-out transform rounded-lg bg-gray-50 focus:outline-none focus:border-transparent focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-300">
+                        
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            
+                    </div>
                     <div class="mt-4 ui-widget" id="direction">
                         
                         <label for="search_direction" class="font-bold">Direction :</label>

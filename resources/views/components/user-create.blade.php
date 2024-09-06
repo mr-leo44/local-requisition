@@ -41,6 +41,12 @@
                                 :value="old('name')" required />
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
+                        <div class="mt-4" id="email">
+                            <x-input-label for="email" :value="__('Email')" />
+                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                                :value="old('email')" required />
+                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                        </div>
                         <div class="mt-4 ui-widget" id="direction">
                             <x-input-label for="search_direction" :value="__('Direction')" />
                             <x-text-input id="search_direction" class="block mt-1 w-full" type="text"
@@ -88,9 +94,11 @@
 <script type="text/javascript">
     $(function() {
         var users = @json($users);
+        // console.log(users);
+        
         var usersData = []
         for (var i = 0; i < users.length; i++) {
-            usersData.push(users[i]['first_name'] + ' ' + users[i]['last_name']);
+            usersData.push(users[i]->name);
         }
 
         $("#search_user").autocomplete({
@@ -104,7 +112,7 @@
         var directionsData = []
 
         for (var i = 0; i < directions.length; i++) {
-            directionsData.push(directions[i]['name']);
+            directionsData.push(directions[i]->name);
         }
 
         $("#search_direction").autocomplete({
@@ -115,7 +123,7 @@
         var servicesData = []
 
         for (var i = 0; i < services.length; i++) {
-            servicesData.push(services[i]['service']);
+            servicesData.push(services[i]->service);
         }
 
         $("#search_service").autocomplete({

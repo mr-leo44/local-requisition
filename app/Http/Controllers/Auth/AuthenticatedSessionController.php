@@ -32,31 +32,29 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $data = [
-            "username" => $request->username,
+            "email" => $request->email,
             "password" => $request->password
         ];
+        // $user = User::where('email', $data['username'])->first();
+        // $response = Http::withHeaders([
+        //     'Content-Type' => 'application/json'
+        // ])->post('http://10.143.41.70:8000/promo2/odcapi/?method=login', $data);
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json'
-        ])->post('http://10.143.41.70:8000/promo2/odcapi/?method=login', $data);
-
-        if ($response->successful()) {
+        if ($data) {
             $request->session()->regenerate();
-            $responseFinal = $response->json();
             if (User::all()->count() == 0) {
-                $responseFinal['user']['password'] = $data['password'];
-                Session::put('user', $responseFinal['user']);
+                Session::put('user', $data);
                 Session::put('admin', RoleEnum::ADMIN);
                 return redirect()->route('register');
             } else {
-                $user = User::where('email', $responseFinal['user']['email'])->first();
+                $user = User::where('email', $data['email'])->first();
                 if ($user) {
                     // dd($user->compte->is_activated);
                     if ($user->compte->is_activated === 0) {
                         return back()->with('error', 'Votre compte a été désactivé. veuillez contacter l\'admin pour activation');
                     } else {
                         Session::put('authUser', $user);
-                        Session::put('user', $responseFinal['user']['username']);
+                        Session::put('user', $data);
                         if ($user->compte->role->value === 'livraison') {
                             return redirect()->route('dashboard');
                         } elseif ($user->compte->role->value === 'admin') {
@@ -65,13 +63,13 @@ class AuthenticatedSessionController extends Controller
                             return redirect()->route('demandes.index');
                         } else {
                             Session::put('admin', null);
-                            Session::put('user', $responseFinal['user']);
+                            Session::put('user', $data);
                             return redirect()->route('register');
                         }
                     }
                 } else {
                     Session::put('admin', null);
-                    Session::put('user', $responseFinal['user']);
+                    Session::put('user', $data);
                     return redirect()->route('register');
                 }
             }

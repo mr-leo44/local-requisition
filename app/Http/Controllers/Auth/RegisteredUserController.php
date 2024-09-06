@@ -20,10 +20,11 @@ class RegisteredUserController extends Controller
      */
     public function create()
     {
-        $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
-        if ($response->successful()) {
-            $users = $response->json()['users'];
-        }
+        // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
+        // if ($response->successful()) {
+        //     $users = $response->json()['users'];
+        // }
+        $users = User::all();
 
         $directions = Direction::all();
         $services = Compte::select('service')->distinct()->get();
@@ -42,6 +43,7 @@ class RegisteredUserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'name' => ['required', 'string', 'max:255'],
             'direction' => ['required', 'string'],
             'manager' => ['required', 'string'],
             'service' => ['required', 'string'],
@@ -63,65 +65,65 @@ class RegisteredUserController extends Controller
             $exist_manager = User::where('name', $request->manager)->first();
             $manager = $exist_manager->id;
         } else {
-            $user_array = explode(' ', $request->manager);
-            $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$user_array[0]");
-            if ($response->successful()) {
-                $userResponse = $response->json();
-                $managerData = $userResponse['users'][0];
-                $manager = $managerData['id'];
-            }
+            // $user_array = explode(' ', $request->manager);
+            // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$user_array[0]");
+            // if ($response->successful()) {
+            //     $userResponse = $response->json();
+            //     $managerData = $userResponse['users'][0];
+            //     $manager = $managerData['id'];
+            // }
+                $manager = 1;
         }
         if (Session::has('admin')) {
             $adminData = Session::get('user');
-            $userInsert = DB::table('users')->insert([
-                'id' => $adminData['id'],
-                'name' => $adminData['first_name'] .  ' ' . $adminData['last_name'],
+            $userInsert = User::create([
+                // 'id' => $adminData['id'],
+                'name' => $request->name,
                 'email' => $adminData['email'],
                 'password' => Hash::make($adminData['password']),
             ]);
             if ($userInsert) {
-                $user = User::find($adminData['id']);
+                // $user = User::find($adminData['id']);
                 Compte::create([
-                    "manager" => $user->id,
-                    "user_id" => $user->id,
+                    "manager" => $manager,
+                    "user_id" => $userInsert->id,
                     "service" => $request->service,
                     "direction_id" => $direction->id,
                     "role" => RoleEnum::ADMIN
                 ]);
-                Session::put('user', $adminData['username']);
+                Session::put('user', $adminData);
             }
         } else {
-            $username = session('user')['username'];
-            $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByUsername&username=$username");
-            if ($response->successful()) {
-                $userResponse = $response->json();
-                $userData = $userResponse['users'][0];
-                $userInsert = DB::table('users')->insert([
-                    'id' => $userData['id'],
-                    'name' => $userData['first_name'] .  ' ' . $userData['last_name'],
-                    'email' => $userData['email'],
-                    'password' => Hash::make('password'),
+            $user = session('user');
+            // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByUsername&username=$username");
+            if ($user) {
+                // $userResponse = $response->json();
+                $userInsert = User::create([
+                    // 'id' => $userData['id'],
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'password' => Hash::make($user['password']),
                 ]);
                 if ($userInsert) {
-                    $user = User::find($userData['id']);
+                    // $user = User::find($userData['id']);
                     Compte::create([
                         "manager" => $manager,
-                        "user_id" => $user->id,
+                        "user_id" => $userInsert->id,
                         "service" => $request->service,
                         "direction_id" => $direction->id,
                         "role" => RoleEnum::USER
                     ]);
-                    Session::put('user', $userData['username']);
+                    Session::put('user', $user['username']);
                 }
             }
         }
-        if ($user) {
-            Session::put('authUser', $user);
-            if ($user->compte->role->value === 'livraison') {
+        if ($userInsert) {
+            Session::put('authUser', $userInsert);
+            if ($userInsert->compte->role->value === 'livraison') {
                 return redirect()->route('dashboard');
-            } elseif ($user->compte->role->value === 'admin') {
+            } elseif ($userInsert->compte->role->value === 'admin') {
                 return redirect()->route('approbateurs.index');
-            } elseif ($user->compte->role->value === 'user') {
+            } elseif ($userInsert->compte->role->value === 'user') {
                 return redirect()->route('demandes.index');
             }
         } else {

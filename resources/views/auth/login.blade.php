@@ -43,9 +43,9 @@
                       <div>
                           <x-input-error :messages="session('error')" class="mb-3" />
                           
-                          <label for="username" class="font-bold">Username :</label>
+                          <label for="email" class="font-bold">Email :</label>
 
-                          <input type="text" name="username" id="username" class="border-gray-500 bg-transparent block w-full px-5 py-3 text-base text-black placeholder-gray-300 transition duration-500 ease-in-out transform rounded-lg bg-gray-50 focus:outline-none focus:border-transparent focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-300" placeholder="Enter your username">
+                          <input type="email" name="email" id="email" class="border-gray-500 bg-transparent block w-full px-5 py-3 text-base text-black placeholder-gray-300 transition duration-500 ease-in-out transform rounded-lg bg-gray-50 focus:outline-none focus:border-transparent focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-300" placeholder="Enter your email">
                         </div>
                       <div>
                           <label for="password" class="font-bold">Password :</label>

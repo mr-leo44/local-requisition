@@ -1,4 +1,4 @@
-<nav class="fixed z-30 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 py-3 px-6">
+<nav>
     <div class="px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
@@ -7,7 +7,7 @@
                     @elseif(Session::get('authUser')->compte->role->value === 'livraison')
                     href="{{ route('dashboard') }}"
                     @else
-                    href="{{ route('approbateurs.index') }}" @endif
+                    href="{{ route('users.index') }}" @endif
                     class="flex ms-2 md:me-24 items-center">
                     <img src="{{ asset('img/orange.png') }}" class="h-9 me-3" alt="FlowBite Logo" />
                     <span

@@ -23,11 +23,11 @@ class ProfileController extends Controller
     {
         $user = Session::get('authUser');
         $user = User::with('compte.direction')->find($user->id);
-        $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
-        if ($response->successful()) {
-            $users = $response->json()['users'];
-        }
-
+        // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
+        // if ($response->successful()) {
+        //     $users = $response->json()['users'];
+        // }
+        $users = User::all();
         $directions = Direction::all();
         $services = Compte::select('service')->distinct()->get();
 
@@ -99,14 +99,14 @@ class ProfileController extends Controller
         $manager = User::where('name', $request->manager)->first();
         if ($manager) {
             $compte->manager = $manager->id;
-        } else {
-            $user_array = explode(' ', $request->manager);
-            $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name={$user_array[0]}");
-            if ($response->successful()) {
-                $userResponse = $response->json();
-                $managerData = $userResponse['users'][0];
-                $compte->manager = $managerData['id'];
-            }
+        // } else {
+        //     $user_array = explode(' ', $request->manager);
+        //     $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name={$user_array[0]}");
+        //     if ($response->successful()) {
+        //         $userResponse = $response->json();
+        //         $managerData = $userResponse['users'][0];
+        //         $compte->manager = $managerData['id'];
+        //     }
         }
 
         $compte->service = $request->service;

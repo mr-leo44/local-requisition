@@ -20,10 +20,11 @@ class AdminController extends Controller
     public function index()
     {
         $users = User::with('compte')->where('id', '!=', Session::get('authUser')->id)->latest()->paginate(10);
-        $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
-        if ($response->successful()) {
-            $usersList = $response->json()['users'];
-        }
+        // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUsers");
+        // if ($response->successful()) {
+        //     $usersList = $response->json()['users'];
+        // }
+        $usersList = User::all();
 
         $directions = Direction::all();
         $services = Compte::select('service')->distinct()->get();
@@ -59,26 +60,30 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $request->validate([
-            'name' => 'required|string|max:50|unique:'.User::class,
+            'name' => 'required|string|max:50|unique:' . User::class,
+            'email' => ['required', 'email'],
             'direction' => ['required', 'string'],
             'manager' => ['required', 'string'],
             'service' => ['required', 'string'],
         ]);
 
-        $user_array = explode(' ', $request->name);
-        $manager_array = explode(' ', $request->manager);
-        $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$user_array[0]");
-        if ($response->successful()) {
-            $userResponse = $response->json();
-            $userData = $userResponse['users'][0];
-        }
-        $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$manager_array[0]");
-        if ($response->successful()) {
-            $dataResponse = $response->json();
-            $managerData = $dataResponse['users'][0];
-            $manager = $managerData['id'];
-        }
+        // $user_array = explode(' ', $request->name);
+        // $manager_array = explode(' ', $request->manager);
+        // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$user_array[0]");
+        // if ($response->successful()) {
+        //     $userResponse = $response->json();
+        //     $userData = $userResponse['users'][0];
+        // }
+            $userData = User::where('email', $request->email)->first();
+            // $response = Http::get("http://10.143.41.70:8000/promo2/odcapi/?method=getUserByName&name=$manager_array[0]");
+            // if ($response->successful()) {
+                //     $dataResponse = $response->json();
+                //     $managerData = $dataResponse['users'][0];
+                //     $manager = $managerData['id'];
+                // }
+                $manager = User::where('name', $request->manager)->first();
 
         if (Direction::where('name', $request->direction)->exists()) {
             $direction = Direction::where('name', '=', $request->direction)->first();
@@ -91,17 +96,17 @@ class AdminController extends Controller
                 ]);
             }
         }
-        $userInserted = DB::table('users')->insert([
-            'id' => $userData['id'],
-            'name' => $userData['first_name'] .  ' ' . $userData['last_name'],
-            'email' => $userData['email'],
+        $userInserted = user::create([
+            // 'id' => $userData['id'],
+            'name' => $request->name,
+            'email' => $request->email,
             'password' => Hash::make('password'),
         ]);
         if ($userInserted) {
-            $user = User::find($userData['id']);
+            // $user = User::find($userData['id']);
             Compte::create([
-                "manager" => $manager,
-                "user_id" => $user->id,
+                "manager" => $manager == null ? $manager : $userInserted->id,
+                "user_id" => $userInserted->id,
                 "service" => $request->service,
                 "direction_id" => $direction->id,
                 "role" => $request->role
