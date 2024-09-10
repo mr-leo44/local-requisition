@@ -19,7 +19,7 @@
             </button>
         </div>
         <div class="flex justify-between items-center gap-3">
-            <button type="button" data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
+            <button type="button" @if (Session::get('authUser')->compte->role->value === 'livraison') class="hidden" @endif data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
                 class="p-2.5 ms-2 ease-in-out transition-all duration-75 text-sm font-medium text-white bg-orange-500 rounded-lg">
                 <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">
@@ -56,8 +56,8 @@
         </div>
     </div>
     <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="cardGridView">
-        @if ($reqs->count() > 0)
-            @foreach ($reqs as $req)
+        @if ($ongoings->count() > 0)
+            @foreach ($ongoings as $req)
                 <div
                     class="block bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
                     <div class="border-b dark:border-gray-600 p-4">
@@ -143,8 +143,8 @@
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
-                @if ($reqs->count() > 0)
-                    @foreach ($reqs as $key => $req)
+                @if ($ongoings->count() > 0)
+                    @foreach ($ongoings as $key => $req)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 dark:border-gray-700">
                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                 {{ $key + 1 }}
@@ -206,9 +206,7 @@
     </div>
 </div>
 
-<x-createDemande />
 <x-deleteDemande />
-<x-showRequisition />
 
 <script>
     const listView = document.getElementById("listView");
