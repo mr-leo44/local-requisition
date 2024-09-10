@@ -8,12 +8,14 @@ use Illuminate\View\Component;
 
 class Historics extends Component
 {
+
+    public $historics;
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public function __construct($historics)
     {
-        //
+        $this->historics = $historics;
     }
 
     /**

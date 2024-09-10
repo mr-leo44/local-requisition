@@ -40,7 +40,8 @@ class DemandeController extends Controller
             $connected_user['approver'] = true;
         }
         $ongoings = $this->getOngoingReqs($connected_user);
-        return view('demandes.index', compact('ongoings', 'connected_user'));
+        $historics = $this->getReqsHistoric($connected_user);
+        return view('demandes.index', compact('ongoings', 'connected_user', 'historics'));
     }
 
     private function getOngoingReqs($user)
@@ -110,6 +111,78 @@ class DemandeController extends Controller
             }
         }
         return $reqs;
+    }
+
+    private function getCollaboratorsReqs($user) {}
+    private function getReqsHistoric($user)
+    {
+        if ($user->compte->role->value === 'user') {
+            $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($user) {
+                $query->where('approbateur_id', $user->id)
+                    ->orWhere('demandeur_id', $user->id)
+                    ->where('status', '!=', 'en cours');
+            })
+                ->orderBy('created_at', 'desc')
+                ->paginate(12);
+        }
+        if ($user->compte->role->value === 'livraison') {
+            $reqs = Demande::all();
+            $all_validated_keys = [];
+            foreach ($reqs as $key => $req) {
+                $last = Traitement::where('demande_id', $req->id)->orderBy('id', 'DESC')->first();
+                if ($last && $last->status === 'validé') {
+                    $all_validated_keys[$key] = $req->id;
+                }
+            }
+            $validated_reqs = Demande::whereIn('id', $all_validated_keys)->get();
+            $reqs_delivered = [];
+            foreach ($validated_reqs as $key => $validated) {
+                $req_details = DemandeDetail::where('demande_id', $validated->id)->get();
+                $delivered = 0;
+                foreach ($req_details as $req_detail) {
+                    $req_count = $req_detail->qte_demandee;
+                    $deliveries = Livraison::where('demande_detail_id', $req_detail->id)->get();
+                    $count = 0;
+                    if ($deliveries->count() > 0) {
+                        foreach ($deliveries as $key => $delivery) {
+                            $count += $delivery->quantite;
+                        }
+                    }
+                    if ($req_count === $count) {
+                        $delivered += 1;
+                    }
+                }
+                if ($delivered === $req_details->count()) {
+                    $reqs_delivered[] = $validated;
+                }
+            }
+            $demandes_array = collect($reqs_delivered);
+            $demandes = Demande::with('demande_details')->whereIn('id', $demandes_array->pluck('id'))->orderBy('created_at', 'desc')->paginate(12);
+        }
+
+        foreach ($demandes as $key => $req) {
+            $last_flow = Traitement::where('demande_id', $req->id)->orderBy('id', 'DESC')->first();
+            if ($last_flow->status === 'validé') {
+                $details = $req->demande_details()->get();
+                $count = 0;
+                foreach ($details as $key => $detail) {
+                    if ($detail->qte_demandee === $detail->qte_livree) {
+                        $count += 1;
+                    }
+                }
+                if ($count === $details->count()) {
+                    $req['status'] = 'Livré';
+                } else {
+                    $req['status'] = 'En attente de livraison';
+                }
+            } elseif ($last_flow->status === 'rejeté') {
+                $req['status'] = 'Rejeté';
+            } else {
+                $req['status'] = 'En cours';
+            }
+        }
+
+        return $demandes;
     }
 
     /**
