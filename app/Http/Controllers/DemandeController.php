@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
-use App\Models\Compte;
 use App\Enums\RoleEnum;
 use App\Models\Demande;
 use App\Mail\DemandeMail;
@@ -40,9 +39,10 @@ class DemandeController extends Controller
             $connected_user['approver'] = true;
         }
         $ongoings = $this->getOngoingReqs($connected_user);
-        $historics = $this->getReqsHistoric($connected_user);
         $collaborators = $this->getCollaboratorsReqs($connected_user);
-        return view('demandes.index', compact('ongoings', 'connected_user', 'historics', 'collaborators'));
+        $validate = $this->getReqsToValidate($connected_user);
+        $historics = $this->getReqsHistoric($connected_user);
+        return view('demandes.index', compact('ongoings', 'connected_user', 'historics', 'collaborators', 'validate'));
     }
 
     private function getOngoingReqs($user)
@@ -116,8 +116,7 @@ class DemandeController extends Controller
 
     private function getCollaboratorsReqs($user)
     {
-        $isManager = Compte::where('manager', $user->id)->exists();
-        if ($isManager) {
+        if ($user->manager) {
             $userCollaborators = User::whereHas('compte', function (Builder $query) use ($user) {
                 $query->where('manager', $user->id)->where('user_id', '!=', $user->id);
             })->get();
@@ -142,7 +141,6 @@ class DemandeController extends Controller
                 if ($last_flow->status === 'rejeté') {
                     $demande['status'] = 'Rejeté';
                 } elseif ($last_flow->status === 'validé') {
-
                     $count = 0;
                     foreach ($details as $key => $detail) {
                         if ($detail->qte_demandee === $detail->qte_livree) {
@@ -170,6 +168,30 @@ class DemandeController extends Controller
         }
         return $demandes;
     }
+
+    private function getReqsToValidate($user)
+    {
+        if ($user->approver) {
+            $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($user) {
+                $query->where('approbateur_id', $user->id);
+            })->latest()->paginate(12);
+
+            foreach ($demandes as $demande) {
+                $last_flow = Traitement::where('demande_id', $demande->id)->where('approbateur_id', $user->id)->get()->last();
+                $demande['level'] = $last_flow->level;
+                if ($last_flow->approbateur_id === $user->id) {
+                    $demande['validator'] = true;
+                } else {
+                    $demande['validator'] = false;
+                }
+            }
+        } else {
+            $demandes = [];
+        }
+        // dd($demandes);
+        return $demandes;
+    }
+
     private function getReqsHistoric($user)
     {
         if ($user->compte->role->value === 'user') {
