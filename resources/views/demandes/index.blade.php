@@ -61,9 +61,9 @@
             <div class="text-gray-900 dark:text-white">
                 <div id="default-styled-tab-content">
                     <x-reqs.ongoing :ongoings="$ongoings" />
-                    <x-reqs.collaborators />
+                    <x-reqs.collaborators :collaborators="$collaborators" />
                     <x-reqs.validate />
-                    <x-reqs.historics />
+                    <x-reqs.historics :historics="$historics" />
                     <x-reqs.statistics />
                 </div>
             </div>
@@ -71,7 +71,6 @@
     </div>
 
     <x-createDemande />
-    <x-deleteDemande />
     <x-showRequisition />
 
     <script>
@@ -88,7 +87,6 @@
 
         var isManager = `{{ $connected_user->manager }}`
         var isApprover = `{{ $connected_user->approver }}`
-        console.log(isManager);
 
         if (!isManager) {
             collaboratorsButton.classList.add("hidden")

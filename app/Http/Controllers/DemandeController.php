@@ -41,7 +41,8 @@ class DemandeController extends Controller
         }
         $ongoings = $this->getOngoingReqs($connected_user);
         $historics = $this->getReqsHistoric($connected_user);
-        return view('demandes.index', compact('ongoings', 'connected_user', 'historics'));
+        $collaborators = $this->getCollaboratorsReqs($connected_user);
+        return view('demandes.index', compact('ongoings', 'connected_user', 'historics', 'collaborators'));
     }
 
     private function getOngoingReqs($user)
@@ -113,7 +114,60 @@ class DemandeController extends Controller
         return $reqs;
     }
 
-    private function getCollaboratorsReqs($user) {}
+    private function getCollaboratorsReqs($user)
+    {
+        $isManager = Compte::where('manager', $user->id)->exists();
+        if ($isManager) {
+            $userCollaborators = User::whereHas('compte', function (Builder $query) use ($user) {
+                $query->where('manager', $user->id)->where('user_id', '!=', $user->id);
+            })->get();
+            $collabs_req_keys = [];
+            foreach ($userCollaborators as $collaborator) {
+                $reqs_collabs = Demande::with('demande_details')->where('user_id', $collaborator->id)->latest()->get();
+                foreach ($reqs_collabs as $req) {
+                    $collabs_req_keys[] = $req->id;
+                }
+            }
+            $demandes = Demande::with('demande_details')->whereIn('id', $collabs_req_keys)->latest()->paginate(12);
+            foreach ($demandes as $demande) {
+                $last_flow = Traitement::where('demande_id', $demande->id)->get()->last();
+                $details = $demande->demande_details()->get();
+                $demande['level'] = $last_flow->level;
+                if ($last_flow->approbateur_id === $user->id) {
+                    $demande['validator'] = true;
+                } else {
+                    $demande['validator'] = false;
+                }
+
+                if ($last_flow->status === 'rejeté') {
+                    $demande['status'] = 'Rejeté';
+                } elseif ($last_flow->status === 'validé') {
+
+                    $count = 0;
+                    foreach ($details as $key => $detail) {
+                        if ($detail->qte_demandee === $detail->qte_livree) {
+                            $count += 1;
+                        }
+                    }
+                    if ($count === $details->count()) {
+                        $demande['status'] = 'Livré';
+                    } else {
+                        $demande['status'] = 'En cours de livraison';
+                    }
+                } else {
+                    $demande['status'] = 'En cours';
+                }
+
+                $to_deliver = 0;
+                foreach ($details as $detail) {
+                    $sub = $detail->qte_demandee - $detail->qte_livree;
+                    $to_deliver += $sub;
+                    $demande['to_deliver'] = $to_deliver;
+                }
+            }
+        }
+        return $demandes;
+    }
     private function getReqsHistoric($user)
     {
         if ($user->compte->role->value === 'user') {
@@ -490,6 +544,6 @@ class DemandeController extends Controller
             // }
         }
 
-        return redirect()->route('demandes.index')->with('success', 'Livraison mise à jour avec succès');
+        return redirect()->back()->with('success', 'Livraison mise à jour avec succès');
     }
 }

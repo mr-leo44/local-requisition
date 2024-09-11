@@ -1,5 +1,4 @@
 <div class="hidden p-4 rounded-lg" id="styled-historics" role="tabpanel" aria-labelledby="historics-tab">
-    {{-- {{dd($historics)}} --}}
     <div class="flex gap-3 justify-between items-center mb-6">
         <div class="flex justify-end items-center ml-auto">
             <form class="flex items-center max-w-sm mx-auto">
