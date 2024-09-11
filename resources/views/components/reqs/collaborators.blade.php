@@ -57,7 +57,7 @@
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800">
-                @if ($collaborators->count() > 0)
+                @if ($collaborators && $collaborators->count() > 0)
                     @foreach ($collaborators as $key => $req)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-900 dark:border-gray-700">
                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">
@@ -144,6 +144,8 @@
                 @endif
             </tbody>
         </table>
-        <div class="px-6 py-3 my-4">{{ $collaborators->links() }}</div>
+        @if ($collaborators)
+            <div class="px-6 py-3 my-4">{{ $collaborators->links() }}</div>
+        @endif
     </div>
 </div>

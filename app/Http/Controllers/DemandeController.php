@@ -165,6 +165,8 @@ class DemandeController extends Controller
                     $demande['to_deliver'] = $to_deliver;
                 }
             }
+        } else {
+            $demandes = [];
         }
         return $demandes;
     }
