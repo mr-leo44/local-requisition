@@ -104,7 +104,7 @@
         // Bouttons de validation
         document.getElementById('validation').textContent = ""
 
-        if (req.status === 'en cours' && req.validator === true) {
+        if (req.validator === true) { //Penser à mettre statut partout
 
             var acceptBtn = document.createElement('button')
             acceptBtn.setAttribute('id', 'accept')
