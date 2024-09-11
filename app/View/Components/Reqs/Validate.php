@@ -8,12 +8,13 @@ use Illuminate\View\Component;
 
 class Validate extends Component
 {
+    public $validate;
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public function __construct($validate)
     {
-        //
+        $this->validate = $validate;
     }
 
     /**

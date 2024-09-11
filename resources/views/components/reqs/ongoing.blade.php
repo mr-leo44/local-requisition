@@ -1,7 +1,7 @@
 <div class="hidden p-2 rounded-lg" id="styled-ongoing" role="tabpanel" aria-labelledby="ongoing-tab">
     <div class="flex gap-3 justify-between items-center mb-6">
         <div class="flex justify-between items-center">
-            <button type="button" id="gridView"
+            <button type="button" id="ongoingGridView"
                 class="p-2.5 ms-2 ease-in-out transition-all duration-75 text-sm font-medium text-white bg-gray-400 hover:bg-gray-500 rounded-lg [&.active]:bg-gray-900 active">
                 <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">
@@ -9,7 +9,7 @@
                         d="M9.143 4H4.857A.857.857 0 0 0 4 4.857v4.286c0 .473.384.857.857.857h4.286A.857.857 0 0 0 10 9.143V4.857A.857.857 0 0 0 9.143 4Zm10 0h-4.286a.857.857 0 0 0-.857.857v4.286c0 .473.384.857.857.857h4.286A.857.857 0 0 0 20 9.143V4.857A.857.857 0 0 0 19.143 4Zm-10 10H4.857a.857.857 0 0 0-.857.857v4.286c0 .473.384.857.857.857h4.286a.857.857 0 0 0 .857-.857v-4.286A.857.857 0 0 0 9.143 14Zm10 0h-4.286a.857.857 0 0 0-.857.857v4.286c0 .473.384.857.857.857h4.286a.857.857 0 0 0 .857-.857v-4.286a.857.857 0 0 0-.857-.857Z" />
                 </svg>
             </button>
-            <button type="button" id="listView"
+            <button type="button" id="ongoingListView"
                 class="p-2.5 ms-2 ease-in-out transition-all duration-75 text-sm font-medium text-white bg-gray-400 hover:bg-gray-500 rounded-lg [&.active]:bg-gray-900">
                 <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">
@@ -55,7 +55,7 @@
             </div>
         </div>
     </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="cardGridView">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="ongoingCardGridView">
         @if ($ongoings->count() > 0)
             @foreach ($ongoings as $req)
                 <div
@@ -70,6 +70,7 @@
                         </div>
                         <p class="font-medium text-md text-gray-700 dark:text-white">{{ $req->user->name }}</p>
                         <p class="font-medium text-md text-gray-700 dark:text-white">{{ $req->service }}</p>
+                        <p class="font-medium text-md text-gray-700 dark:text-white">{{ $req->user->compte->city }}</p>
                     </div>
                     <div class="flex justify-between items-center p-4">
                         <div>
@@ -112,7 +113,7 @@
             @endforeach
         @endif
     </div>
-    <div class="hidden text-gray-900 overflow-x-auto dark:text-white" id="cardListView">
+    <div class="hidden text-gray-900 overflow-x-auto dark:text-white" id="ongoingCardListView">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs uppercase bg-slate-100 dark:bg-transparent text-black dark:text-white">
                 <tr>
@@ -159,7 +160,7 @@
                                 {{ $req->service }}
                             </td>
                             <td class="px-6 py-4">
-                                Kinshasa
+                                {{ $req->user->compte->city }}
                             </td>
                             <td class="px-6 py-4">
                                 {{ $req->created_at->locale('fr')->diffForHumans() }}
@@ -209,33 +210,33 @@
 <x-deleteDemande />
 
 <script>
-    const listView = document.getElementById("listView");
-    const gridView = document.getElementById("gridView");
-    const cardGridView = document.getElementById("cardGridView");
-    const cardListView = document.getElementById("cardListView");
-    listView.addEventListener("click", function() {
-        localStorage.setItem('viewMode', 'list')
-        toggleView()
+    const ongoingListView = document.getElementById("ongoingListView");
+    const ongoingGridView = document.getElementById("ongoingGridView");
+    const ongoingCardGridView = document.getElementById("ongoingCardGridView");
+    const ongoingCardListView = document.getElementById("ongoingCardListView");
+    ongoingListView.addEventListener("click", function() {
+        localStorage.setItem('ongoingViewMode', 'ongoingList')
+        toggleOngoingView()
     });
-    gridView.addEventListener("click", function() {
-        localStorage.setItem('viewMode', 'grid')
-        toggleView()
+    ongoingGridView.addEventListener("click", function() {
+        localStorage.setItem('ongoingViewMode', 'ongoingGrid')
+        toggleOngoingView()
     });
 
-    function toggleView() {
-        const viewMode = localStorage.getItem('viewMode')
-        if (viewMode === 'list') {
-            gridView.classList.remove("active");
-            cardGridView.classList.add("hidden");
-            listView.classList.add("active");
-            cardListView.classList.remove("hidden");
-            cardListView.classList.add("active");
+    function toggleOngoingView() {
+        const ongoingViewMode = localStorage.getItem('ongoingViewMode')
+        if (ongoingViewMode === 'ongoingList') {
+            ongoingGridView.classList.remove("active");
+            ongoingCardGridView.classList.add("hidden");
+            ongoingListView.classList.add("active");
+            ongoingCardListView.classList.remove("hidden");
+            ongoingCardListView.classList.add("active");
         } else {
-            listView.classList.remove("active");
-            cardListView.classList.add("hidden");
-            gridView.classList.add("active");
-            cardGridView.classList.remove("hidden");
-            cardGridView.classList.add("active");
+            ongoingListView.classList.remove("active");
+            ongoingCardListView.classList.add("hidden");
+            ongoingGridView.classList.add("active");
+            ongoingCardGridView.classList.remove("hidden");
+            ongoingCardGridView.classList.add("active");
         }
     }
     toggleView()
