@@ -22,7 +22,7 @@
                 <span class="sr-only">Close modal</span>
             </button>
             <div class="p-4 md:p-5">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Effecter une livraison</h3>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Effectuer une livraison</h3>
 
                 <form action="{{ route('demandes.updateLivraison') }}" method="post" id="updateForm">
                     @csrf
@@ -73,14 +73,11 @@
         }
 
 
-        const allInputs = document.querySelectorAll('input[name^="details["][name$="[quantite]"]');       
+        const allInputs = document.querySelectorAll('input[name^="details["][name$="[quantite]"]');
         allInputs.forEach(input => {
             if (!input.value || parseInt(input.value) > maxAllowed) {
                 submitBtn.disabled = true;
-            } 
-            // else if (input.value === "") {
-            //     submitBtn.disabled = true
-            // }
+            }
         });
     }
 </script>

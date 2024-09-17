@@ -17,6 +17,7 @@
                     <h3 id="title" class="text-xl font-bold text-gray-900 dark:text-white mb-2"></h3>
                     <p id="user" class="font-medium"></p>
                     <p id="service" class="font-medium"></p>
+                    <p id="city" class="font-medium"></p>
                 </div>
                 <div class="my-8 rounded dark:bg-gray-700 dark:border-gray-600 p-4">
                     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
@@ -34,15 +35,24 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-900">
-                        </tbody>
+                        <tbody class="bg-white dark:bg-gray-900"></tbody>
                     </table>
-                    <div class="mt-8" id="reject-form"></div>
                     <div class="mt-8 flex justify-end items-center">
-                        <div id="validation" class="flex justify-between items-center gap-2"></div>
+                        <div id="validation" class="flex justify-between items-center gap-2">
+                            <button id="validateReq" data-modal-target="validate-modal"
+                                data-modal-toggle="validate-modal" data-modal-hide="show-modal" type="button"
+                                class="text-white bg-emerald-700 hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-black-300 font-medium rounded-md text-sm px-5 py-1.5 text-center dark:bg-black-600 dark:hover:bg-black-700 dark:focus:ring-black-800">
+                                Valider
+                            </button>
+                            <button id="rejectReq" data-modal-hide="show-modal" data-modal-target="popup-modal"
+                                data-modal-toggle="popup-modal" type="button"
+                                class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-md text-sm px-5 py-1.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+                                Rejeter
+                            </button>
+                        </div>
                         <a data-modal-target="default-modal" id="deliver" data-modal-toggle="default-modal"
                             data-modal-hide="show-modal"
-                            class="bg-red-600 px-3 py-2 rounded ease-in-out transition-all duration-75 dark:text-white">
+                            class="bg-theme text-sm px-5 py-1.5 rounded ease-in-out transition-all duration-75 text-white">
                             Livrer
                         </a>
                     </div>
@@ -52,6 +62,9 @@
     </div>
 </div>
 
+<x-validateRequest />
+<x-rejectRequest />
+
 @php
     $role = Session::get('authUser')->compte->role->value;
 @endphp
@@ -59,11 +72,6 @@
 <x-show-livraison />
 <script>
     function showModal(req) {
-        const userRole = `{{ $role }}`
-        if(userRole === 'user') {
-            document.querySelector('#deliver').classList.add("hidden")
-        } 
-
         const title = document.getElementById('title')
         title.classList.add("dark:text-white")
         title.textContent = `Demande de requisition N° ${req.numero}`
@@ -73,10 +81,17 @@
         const service = document.getElementById('service')
         service.textContent = `Service : ${req.service}`
         service.classList.add("dark:text-white")
+        const city = document.getElementById('city')
+        service.textContent = `Ville : ${req.user.compte.city}`
+        service.classList.add("dark:text-white")
+        const userRole = `{{ $role }}`
+        if (userRole === 'user') {
+            document.querySelector('#deliver').classList.add("hidden")
+        }
 
         const details = req.demande_details
+
         document.querySelector('#details_table tbody').textContent = ""
-        document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details))
 
         // Générer tableau des details
         details.forEach(detail => {
@@ -101,133 +116,34 @@
             document.querySelector('#details_table tbody').appendChild(tr)
         });
 
-        // Bouttons de validation
-        document.getElementById('validation').textContent = ""
-
-        if (req.validator === true) { //Penser à mettre statut partout
-
-            var acceptBtn = document.createElement('button')
-            acceptBtn.setAttribute('id', 'accept')
-            acceptBtn.setAttribute('data-modal-target', 'valider')
-            acceptBtn.setAttribute('data-modal-toggle', 'valider')
-            acceptBtn.setAttribute('type', 'button')
-            acceptBtn.textContent = 'Valider'
-            acceptBtn.classList.add("text-white", "bg-emerald-700", "hover:bg-emerald-800", "focus:outline-none",
-                "focus:ring-4", "focus:ring-black-300", "font-medium", "rounded-md", "text-sm", "px-5", "py-2.5",
-                "text-center", "me-2", "mb-2", "dark:bg-black-600", "dark:hover:bg-black-700",
-                "dark:focus:ring-black-800")
-            document.getElementById('validation').appendChild(acceptBtn)
-
-
-            var rejecteBtn = document.createElement('button')
-            rejecteBtn.setAttribute('id', 'reject')
-            rejecteBtn.setAttribute('data-modal-target', 'popup-modal')
-            rejecteBtn.setAttribute('data-modal-toggle', 'popup-modal')
-            rejecteBtn.setAttribute('type', 'button')
-            rejecteBtn.textContent = 'Rejeter'
-            rejecteBtn.classList.add("text-white", "bg-red-700", "hover:bg-red-800", "focus:outline-none",
-                "focus:ring-4", "focus:ring-red-300", "font-medium", "rounded-md", "text-sm", "px-5", "py-2.5",
-                "text-center", "me-2", "mb-2", "dark:bg-red-600", "dark:hover:bg-red-700", "dark:focus:ring-red-800"
-            )
-            document.getElementById('validation').appendChild(rejecteBtn)
-
-            //valider
-            document.querySelector("#validation #accept").addEventListener('click', function() {
-                $.ajax({
-                    url: `/${req.id}/validate`,
-                    type: 'POST',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        demande: req,
-                        status: 'validé'
-                    },
-                    success: function(response) {
-                        const smallModal = new Modal(document.getElementById('show-modal'))
-                        smallModal.hide()
-                        document.querySelector("body > div[modal-backdrop]")?.remove()
-                        location.reload()
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Erreur AJAX : ' + error);
-                    }
-                })
+        if (req.validator === true) {
+            document.querySelector("#validation #validateReq").addEventListener('click', function() {
+                event.preventDefault();
+                var text = "Etes-vous vraiment sûr de valider cette demande?"
+                validateRequest(req, text)
             })
 
-            //rejeter
-            document.querySelector("#validation #reject").addEventListener('click', function() {
-                document.querySelector("#validation #accept").classList.add('hidden')
-                document.querySelector("#validation #reject").classList.add('hidden')
-
-                const rejectForm = document.createElement('form')
-                var rejectlabel = document.createElement('label')
-                rejectlabel.setAttribute('for', 'observation')
-                rejectlabel.classList.add("block", "mb-2", "text-sm", "font-medium", "text-gray-900",
-                    "dark:text-white")
-                rejectlabel.innerHTML = `Motifs <span class="lg: text-xs italic">(facultatif)</span>`
-                rejectForm.appendChild(rejectlabel)
-
-                var rejectTextArrea = document.createElement('textarea')
-                rejectTextArrea.setAttribute('id', 'observation')
-                rejectTextArrea.setAttribute('name', 'observation')
-                rejectTextArrea.setAttribute('rows', '5')
-                rejectTextArrea.setAttribute('placeholder', 'Veuillez écrire vos motifs ici...')
-                rejectTextArrea.classList.add("block", "p-2.5", "w-full", "text-sm", "resize-none",
-                    "overflow-auto", "text-gray-900", "bg-gray-50", "rounded-lg", "border",
-                    "border-gray-300", "focus:ring-blue-500", "focus:border-blue-500", "dark:bg-gray-700",
-                    "dark:border-gray-600", "dark:placeholder-gray-400", "dark:text-white",
-                    "dark:focus:ring-blue-500", "dark:focus:border-blue-500")
-                rejectForm.appendChild(rejectTextArrea)
-
-                var validateReject = document.createElement('button')
-                validateReject.setAttribute('id', 'validate-reject')
-                validateReject.setAttribute('type', 'submit')
-                validateReject.textContent = 'Envoyer'
-                validateReject.classList.add("text-white", "bg-red-700", "hover:bg-red-800",
-                    "focus:outline-none", "my-4",
-                    "focus:ring-4", "focus:ring-red-300", "font-medium", "rounded-md", "text-sm", "px-5",
-                    "py-2.5",
-                    "text-center", "me-2", "mb-2", "dark:bg-red-600", "dark:hover:bg-red-700",
-                    "dark:focus:ring-red-800"
-                )
-                rejectForm.appendChild(validateReject)
-
-                document.getElementById('reject-form').appendChild(rejectForm)
-
-                $("#reject-form").show()
-
-                document.getElementById('validate-reject').addEventListener("click", function() {
-                    $.ajax({
-                        url: `/${req.id}/validate`,
-                        type: 'POST',
-                        data: {
-                            _token: $('meta[name="csrf-token"]').attr('content'),
-                            demande: req,
-                            status: 'rejeté'
-                        },
-                        success: function(response) {
-                            const smallModal = new Modal(document.getElementById(
-                                'show-modal'))
-                            smallModal.hide()
-                            document.querySelector("body > div[modal-backdrop]")?.remove()
-                            location.reload()
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Erreur AJAX : ' + error);
-                        }
-                    })
-                })
-
+            document.querySelector("#validation #rejectReq").addEventListener('click', function() {
+                event.preventDefault();
+                rejectRequest(req)
             })
+        }
+
+        if (userRole === 'livraison') {
+            document.getElementById('validation').classList.add('hidden')
+            var text = "Etes-vous vraiment sûr de faire cette livraison?"
+            document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details, text))
         }
     }
 
-    function updateDetails(details) {
+    function updateDetails(details, text) {
         document.querySelector('#deliver-form tbody').textContent = ""
 
         var deliverDetails = []
         for (const key in details) {
             if (details[key].qte_demandee != details[key].qte_livree) {
-                
+                const to_deliver = details[key].qte_demandee - details[key].qte_livree
+
                 var deliverTr = document.createElement('tr')
                 deliverTr.classList.add("border-b", "hover:bg-gray-50", "dark:hover:bg-gray-800",
                     "dark:border-gray-700")
@@ -251,7 +167,7 @@
                 deliverInputTd.classList.add("px-6", "py-4")
                 var deliverDiv = document.createElement('div')
                 deliverDiv.classList.add("flex", "flex-col", "gap-1")
-                deliverDiv.innerHTML = ` 
+                deliverDiv.innerHTML = `
                      <div>
                         <input type="hidden" name="details[${key}][id]"
                             value="${details[key].id}" id="details[${key}][id]"
@@ -261,7 +177,7 @@
                     <x-text-input id="quantite_${key}"
                         class="bg-gray-50 w-full border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500"
                         type="number" name="details[${key}][quantite]"
-                        max="${details[key].qte_demandee}"
+                        max="${to_deliver}"
                         placeholder="Ex. 12" autocomplete="quantite"
                         oninput="validateInput(${key}, ${details[key].qte_demandee}, ${details[key].qte_livree})" />
 
