@@ -19,7 +19,6 @@
                 <div class="flex flex-col text-gray-800 dark:text-white">
                     <h3 class="font-semibold text-base">
                         {{ Session::get('authUser')->name }}</h3>
-                    <span class="text-xs">{{ $profile }}</span>
                 </div>
                 <div>
                     <button type="button" data-dropdown-toggle="apps-dropdown"
