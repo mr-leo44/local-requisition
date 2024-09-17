@@ -15,6 +15,10 @@ export default {
             fontFamily: {
                 sans: ['Helvetica', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                'theme' : '#ff7900',
+                'sombre': '#121827'
+            }
         },
     },
 
