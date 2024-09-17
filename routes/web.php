@@ -13,6 +13,10 @@ Route::get('/', function () {
     }
 })->name('home');
 
+Route::fallback(function(){
+    return response()->view('errors.404', [], 404);
+});
+
 Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware(['auth', 'role:livraison']);
 Route::get('/profile', [ProfileController::class, 'profile'])->name('profile.index')->middleware('auth');
 Route::put('/profile/{user}/update', [ProfileController::class, 'profileUpdate'])->name('profile.update')->middleware('auth');
@@ -24,3 +28,4 @@ require __DIR__ . '/web_approbateur.php';
 require __DIR__ . '/web_direction.php';
 require __DIR__ . '/web_admin.php';
 require __DIR__ . '/web_livraison.php';
+require __DIR__. '/web_delegation.php';
