@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Compte;
 use App\Enums\RoleEnum;
 use App\Models\Demande;
 use App\Mail\DemandeMail;
@@ -38,6 +39,7 @@ class DemandeController extends Controller
         if ($isValidator) {
             $connected_user['approver'] = true;
         }
+
         $ongoings = $this->getOngoingReqs($connected_user);
         $collaborators = $this->getCollaboratorsReqs($connected_user);
         $validate = $this->getReqsToValidate($connected_user);
@@ -48,16 +50,15 @@ class DemandeController extends Controller
     private function getOngoingReqs($user)
     {
         if ($user->compte->role->value === 'user') {
-            $reqs = Demande::whereHas('traitement', function ($query) use ($user) {
+            $reqs = Demande::with('demande_details')->whereHas('traitement', function ($query) use ($user) {
                 $query->where('demandeur_id', $user->id)->where('status', 'en cours');
             })
                 ->orderBy('created_at', 'desc')
                 ->paginate(12);
             foreach ($reqs as $req) {
                 $last_flow = Traitement::where('demande_id', $req->id)->get()->last();
-                $req['status'] = $last_flow->status;
                 $req['level'] = $last_flow->level;
-                if ($last_flow->approbateur_id === $user->id) {
+                if ($last_flow && $last_flow->approbateur_id === $user->id) {
                     if ($req->user_id === $user->id) {
                         $req['validator'] = true;
                     } else {
@@ -100,23 +101,15 @@ class DemandeController extends Controller
                 }
             }
             $demandes_array = collect($on_going);
-            $reqs = Demande::whereIn('id', $demandes_array->pluck('id'))->orderBy('id', 'desc')->paginate(12);
-        }
-        foreach ($reqs as $ongoing) {
-            $details = $ongoing->demande_details;
-            $to_deliver = 0;
-            foreach ($details as $detail) {
-                $sub = $detail->qte_demandee - $detail->qte_livree;
-                $to_deliver += $sub;
-                $ongoing['to_deliver'] = $to_deliver;
-            }
+            $reqs = Demande::with('demande_details')->whereIn('id', $demandes_array->pluck('id'))->orderBy('id', 'desc')->paginate(12);
         }
         return $reqs;
     }
 
     private function getCollaboratorsReqs($user)
     {
-        if ($user->manager) {
+        $isManager = Compte::where('manager', $user->id)->exists();
+        if ($isManager) {
             $userCollaborators = User::whereHas('compte', function (Builder $query) use ($user) {
                 $query->where('manager', $user->id)->where('user_id', '!=', $user->id);
             })->get();
@@ -155,13 +148,6 @@ class DemandeController extends Controller
                 } else {
                     $demande['status'] = 'En cours';
                 }
-
-                $to_deliver = 0;
-                foreach ($details as $detail) {
-                    $sub = $detail->qte_demandee - $detail->qte_livree;
-                    $to_deliver += $sub;
-                    $demande['to_deliver'] = $to_deliver;
-                }
             }
         } else {
             $demandes = [];
@@ -173,7 +159,7 @@ class DemandeController extends Controller
     {
         if ($user->approver) {
             $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($user) {
-                $query->where('approbateur_id', $user->id);
+                $query->where('approbateur_id', $user->id)->where('status', 'en cours');
             })->latest()->paginate(12);
 
             foreach ($demandes as $demande) {
@@ -191,7 +177,6 @@ class DemandeController extends Controller
         // dd($demandes);
         return $demandes;
     }
-
     private function getReqsHistoric($user)
     {
         if ($user->compte->role->value === 'user') {
@@ -259,7 +244,6 @@ class DemandeController extends Controller
                 $req['status'] = 'En cours';
             }
         }
-
         return $demandes;
     }
 
@@ -523,6 +507,8 @@ class DemandeController extends Controller
 
     public function updateLivraison(Request $request)
     {
+
+        // dd($request->all());
         $validatedData = $request->validate([
             'details' => 'required|array',
         ]);
@@ -563,9 +549,6 @@ class DemandeController extends Controller
                     $delivered += 1;
                 }
             }
-            // if ($delivered === $req_details->count()) {
-            //     Mail::to($req->user->email, $req->user->name)->send(new DeliveriesMail($req));
-            // }
         }
 
         return redirect()->back()->with('success', 'Livraison mise à jour avec succès');
