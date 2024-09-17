@@ -56,8 +56,8 @@
             </div>
         </div>
     </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="validateCardGridView">
-        @if ($validate && $validate->count() > 0)
+    @if ($validate && $validate->count() > 0)
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="validateCardGridView">
             @foreach ($validate as $req)
                 <div
                     class="block bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
@@ -90,8 +90,16 @@
                     </div>
                 </div>
             @endforeach
-        @endif
-    </div>
+        </div>
+    @else
+        <div class="grid grid-cols-1" id="validateCardGridView">
+            <div class="block bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center justify-center py-10 text-lg">
+                    {{ __('Pas de demande à valider!') }}
+                </div>
+            </div>
+        </div>
+    @endif
     <div class="hidden text-gray-900 overflow-x-auto dark:text-white" id="validateCardListView">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs uppercase bg-slate-100 dark:bg-transparent text-black dark:text-white">
@@ -100,7 +108,7 @@
                         N°
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        Numero Requisition
+                        Numéro Requisition
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Demandeur
@@ -156,6 +164,12 @@
                             </td>
                         </tr>
                     @endforeach
+                @else
+                    <tr class="dark:border-gray-700">
+                        <td colspan="7" class="px-6 py-4 text-lg text-center">
+                            {{ __('Pas de demande à valider!') }}
+                        </td>
+                    </tr>
                 @endif
             </tbody>
         </table>

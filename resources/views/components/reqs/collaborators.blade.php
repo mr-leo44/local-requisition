@@ -34,7 +34,7 @@
                         N°
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        Numero Requisition
+                        Numéro Requisition
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Demandeur
@@ -47,9 +47,6 @@
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Date
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-right">
-                        Pièces a livrer
                     </th>
                     <th scope="col" class="px-6 py-3 text-right">
                         Action
@@ -118,14 +115,6 @@
                             <td class="px-6 py-4">
                                 {{ $req->created_at->locale('fr')->diffForHumans() }}
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                {{ $req->to_deliver }}
-                                @if ($req->to_deliver > 1)
-                                    {{ __('Pièces') }}
-                                @else
-                                    {{ __('Pièce') }}
-                                @endif
-                            </td>
                             <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
                                 <button data-modal-target="show-modal" data-modal-toggle="show-modal" type="button"
                                     class="bg-orange-500 px-3 py-2 rounded" onclick="showModal({{ $req }})">
@@ -141,6 +130,12 @@
                             </td>
                         </tr>
                     @endforeach
+                    @else
+                    <tr class="dark:border-gray-700">
+                        <td colspan="7" class="px-6 py-4 text-lg text-center">
+                            {{ __('Pas de demande pour l\'instant!') }}
+                        </td>
+                    </tr>
                 @endif
             </tbody>
         </table>

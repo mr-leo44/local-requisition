@@ -19,7 +19,8 @@
             </button>
         </div>
         <div class="flex justify-between items-center gap-3">
-            <button type="button" @if (Session::get('authUser')->compte->role->value === 'livraison') class="hidden" @endif data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
+            <button type="button" @if (Session::get('authUser')->compte->role->value === 'livraison') class="hidden" @endif
+                data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
                 class="p-2.5 ms-2 ease-in-out transition-all duration-75 text-sm font-medium text-white bg-orange-500 rounded-lg">
                 <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">
@@ -55,8 +56,8 @@
             </div>
         </div>
     </div>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="ongoingCardGridView">
-        @if ($ongoings->count() > 0)
+    @if ($ongoings->count() > 0)
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 grid-cols-1 gap-3" id="ongoingCardGridView">
             @foreach ($ongoings as $req)
                 <div
                     class="block bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
@@ -96,6 +97,7 @@
                             </button>
                             @if (session()->get('authUser')->id == $req->user_id && $req->level === 0)
                                 <a onclick="supprimer(event);" data-modal-target="delete-modal"
+                                     href="{{ route('demandes.destroy', $req->id) }}" id="gridDelete"
                                     data-modal-toggle="delete-modal"
                                     class="bg-gray-600 dark:hover:bg-gray-800 px-3 py-2 rounded">
                                     <svg class="w-5 h-5 text-white dark:text-white" aria-hidden="true"
@@ -111,8 +113,21 @@
                     </div>
                 </div>
             @endforeach
-        @endif
-    </div>
+        </div>
+    @else
+        <div class="grid grid-cols-1" id="ongoingCardGridView">
+            <div class="block bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex items-center justify-center py-10 text-lg">
+                    @profile('livraison')
+                        {{ __('Pas de demande de livraison en cours!') }}
+                    @endprofile
+                    @profile('user')
+                        {{ __('Pas de demande en cours!') }}
+                    @endprofile
+                </div>
+            </div>
+        </div>
+    @endif
     <div class="hidden text-gray-900 overflow-x-auto dark:text-white" id="ongoingCardListView">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs uppercase bg-slate-100 dark:bg-transparent text-black dark:text-white">
@@ -121,7 +136,7 @@
                         N°
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        Numero Requisition
+                        Numéro Requisition
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Demandeur
@@ -134,9 +149,6 @@
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Date
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-right">
-                        Pièces a livrer
                     </th>
                     <th scope="col" class="px-6 py-3 text-right">
                         Action
@@ -165,14 +177,6 @@
                             <td class="px-6 py-4">
                                 {{ $req->created_at->locale('fr')->diffForHumans() }}
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                {{ $req->to_deliver }}
-                                @if ($req->to_deliver > 1)
-                                    {{ __('Pièces') }}
-                                @else
-                                    {{ __('Pièce') }}
-                                @endif
-                            </td>
                             <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
                                 <button data-modal-target="show-modal" data-modal-toggle="show-modal" type="button"
                                     class="bg-orange-500 px-3 py-2 rounded" onclick="showModal({{ $req }})">
@@ -186,7 +190,8 @@
                                     </svg>
                                 </button>
                                 @if (session()->get('authUser')->id == $req->user_id && $req->level === 0)
-                                    <a onclick="supprimer(event);" data-modal-target="delete-modal"
+                                    <a onclick="supprimer(event);" data-modal-target="delete-modal" id="tableDelete"
+                                        href="{{ route('demandes.destroy', $req->id) }}"
                                         data-modal-toggle="delete-modal"
                                         class="bg-gray-600 dark:hover:bg-gray-800 px-3 py-2 rounded">
                                         <svg class="w-5 h-5 text-white dark:text-white" aria-hidden="true"
@@ -201,6 +206,17 @@
                             </td>
                         </tr>
                     @endforeach
+                @else
+                    <tr class="dark:border-gray-700">
+                        <td colspan="7" class="px-6 py-4 text-lg text-center">
+                            @profile('livraison')
+                                {{ __('Pas de demande de livraison en cours!') }}
+                            @endprofile
+                            @profile('user')
+                                {{ __('Pas de demande en cours!') }}
+                            @endprofile
+                        </td>
+                    </tr>
                 @endif
             </tbody>
         </table>
@@ -239,5 +255,5 @@
             ongoingCardGridView.classList.add("active");
         }
     }
-    toggleView()
+    toggleOngoingView()
 </script>
