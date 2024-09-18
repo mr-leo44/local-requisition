@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Demande::class);
     }
+    
+    public function delegations(): HasMany
+    {
+        return $this->hasMany(Delegation::class);
+    }
 }
