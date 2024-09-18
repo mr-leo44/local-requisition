@@ -508,7 +508,6 @@ class DemandeController extends Controller
     public function updateLivraison(Request $request)
     {
 
-        // dd($request->all());
         $validatedData = $request->validate([
             'details' => 'required|array',
         ]);
@@ -533,22 +532,22 @@ class DemandeController extends Controller
                 }
             }
 
-            $req = Demande::find((int)$request->req);
-            $req_details = DemandeDetail::where('demande_id', $req->id)->get();
-            $delivered = 0;
-            foreach ($req_details as $req_detail) {
-                $req_count = $req_detail->qte_demandee;
-                $deliveries = Livraison::where('demande_detail_id', $req_detail->id)->get();
-                $count = 0;
-                if ($deliveries->count() > 0) {
-                    foreach ($deliveries as $key => $delivery) {
-                        $count += $delivery->quantite;
-                    }
-                }
-                if ($req_count === $count) {
-                    $delivered += 1;
-                }
-            }
+            // $req = Demande::find((int)$request->req);
+            // $req_details = DemandeDetail::where('demande_id', $req->id)->get();
+            // $delivered = 0;
+            // foreach ($req_details as $req_detail) {
+            //     $req_count = $req_detail->qte_demandee;
+            //     $deliveries = Livraison::where('demande_detail_id', $req_detail->id)->get();
+            //     $count = 0;
+            //     if ($deliveries->count() > 0) {
+            //         foreach ($deliveries as $key => $delivery) {
+            //             $count += $delivery->quantite;
+            //         }
+            //     }
+            //     if ($req_count === $count) {
+            //         $delivered += 1;
+            //     }
+            // }
         }
 
         return redirect()->back()->with('success', 'Livraison mise à jour avec succès');
