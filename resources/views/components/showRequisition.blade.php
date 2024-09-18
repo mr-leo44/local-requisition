@@ -92,6 +92,7 @@
         const details = req.demande_details
 
         document.querySelector('#details_table tbody').textContent = ""
+        document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details))
 
         // Générer tableau des details
         details.forEach(detail => {
@@ -131,12 +132,10 @@
 
         if (userRole === 'livraison') {
             document.getElementById('validation').classList.add('hidden')
-            var text = "Etes-vous vraiment sûr de faire cette livraison?"
-            document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details, text))
         }
     }
 
-    function updateDetails(details, text) {
+    function updateDetails(details) {
         document.querySelector('#deliver-form tbody').textContent = ""
 
         var deliverDetails = []
