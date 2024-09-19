@@ -9,6 +9,7 @@ use App\Enums\RoleEnum;
 use App\Models\Demande;
 use App\Mail\DemandeMail;
 use App\Models\Livraison;
+use App\Models\Delegation;
 use App\Models\Traitement;
 use App\Models\Approbateur;
 use App\Mail\DeliveriesMail;
@@ -28,23 +29,58 @@ class DemandeController extends Controller
     public function index()
     {
         $connected_user = Session::get('authUser');
-        $user_collaborators = User::whereHas('compte', function (Builder $query) use ($connected_user) {
-            $query->where('manager', $connected_user->id)->where('user_id', '!=', $connected_user->id);
-        })->exists();
 
-        if ($user_collaborators) {
+        if ($this->isManager($connected_user)) {
             $connected_user['manager'] = true;
         }
-        $isValidator = Approbateur::where('email', $connected_user->email)->exists();
-        if ($isValidator) {
+
+        if ($this->isApprover($connected_user)) {
             $connected_user['approver'] = true;
+        }
+
+        if ($this->isDelegated($connected_user)) {
+            $connected_user['delegated'] = true;
         }
 
         $ongoings = $this->getOngoingReqs($connected_user);
         $collaborators = $this->getCollaboratorsReqs($connected_user);
+        $delegations = $this->getDelegationsReqs($connected_user);
         $validate = $this->getReqsToValidate($connected_user);
         $historics = $this->getReqsHistoric($connected_user);
-        return view('demandes.index', compact('ongoings', 'connected_user', 'historics', 'collaborators', 'validate'));
+        return view('demandes.index', compact('ongoings', 'connected_user', 'historics', 'collaborators', 'delegations', 'validate'));
+    }
+
+    private function isManager($user)
+    {
+        if (User::whereHas('compte', function (Builder $query) use ($user) {
+            $query->where('manager', $user->id)->where('user_id', '!=', $user->id);
+        })->exists()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isApprover($user)
+    {
+        if (Approbateur::where('email', $user->email)->exists()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function isDelegated($user)
+    {
+        $isDelegated = User::whereHas('delegations', function (Builder $query) use ($user) {
+            $query->where('user_id', $user->id)->where('date_debut', '<=', Carbon::today())->where('date_fin', '>=', Carbon::today());
+        })->exists();
+
+        if ($isDelegated) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private function getOngoingReqs($user)
@@ -69,6 +105,7 @@ class DemandeController extends Controller
         }
 
         if ($user->compte->role->value === 'livraison') {
+            $user['deliver'] = true;
             $demandes = Demande::all();
             $all_validated_keys = [];
             foreach ($demandes as $key => $req) {
@@ -155,6 +192,69 @@ class DemandeController extends Controller
         return $demandes;
     }
 
+    private function getDelegationsReqs($user)
+    {
+        $delegation = Delegation::where('user_id', $user->id)->where('date_debut', '<=', Carbon::today())->where('date_fin', '>=', Carbon::today())->first();
+        if ($delegation) {
+            $manager = User::find($delegation->manager);
+            if ($this->isManager($manager) || $this->isApprover($manager)) {
+                $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($manager) {
+                    $query->where('approbateur_id', $manager->id)->where('status', 'en cours');
+                })->latest()->paginate(12);
+
+                foreach ($demandes as $demande) {
+                    $last_flow = Traitement::where('demande_id', $demande->id)->where('approbateur_id', $manager->id)->get()->last();
+                    $demande['level'] = $last_flow->level;
+                    if ($last_flow->approbateur_id === $manager->id) {
+                        $demande['validator'] = true;
+                    } else {
+                        $demande['validator'] = false;
+                    }
+                }
+            }
+
+            if ($manager->compte->role->value === 'livraison') {
+                $user['deliver'] =true;
+                $reqs = Demande::all();
+                $all_validated_keys = [];
+                foreach ($reqs as $key => $req) {
+                    $last = Traitement::where('demande_id', $req->id)->orderBy('id', 'DESC')->first();
+                    if ($last && $last->status === 'validé') {
+                        $all_validated_keys[$key] = $req->id;
+                    }
+                }
+
+                $validated_reqs = Demande::whereIn('id', $all_validated_keys)->get();
+                $on_going = [];
+                foreach ($validated_reqs as $key => $validated) {
+                    $req_details = DemandeDetail::where('demande_id', $validated->id)->get();
+                    $delivered = 0;
+                    foreach ($req_details as $req_detail) {
+                        $req_count = $req_detail->qte_demandee;
+                        $count = 0;
+                        if (Livraison::where('demande_detail_id', $req_detail->id)->exists()) {
+                            $deliveries = Livraison::where('demande_detail_id', $req_detail->id)->get();
+                            foreach ($deliveries as $key => $delivery) {
+                                $count += $delivery->quantite;
+                            }
+                            if ($req_count === $count) {
+                                $delivered += 1;
+                            }
+                        }
+                    }
+                    if ($delivered < $req_details->count()) {
+                        $on_going[] = $validated;
+                    }
+                }
+                $demandes_array = collect($on_going);
+                $demandes = Demande::with('demande_details')->whereIn('id', $demandes_array->pluck('id'))->orderBy('id', 'desc')->paginate(12);
+            }
+        } else {
+            $demandes = [];
+        }
+        return $demandes;
+    }
+
     private function getReqsToValidate($user)
     {
         if ($user->approver) {
@@ -174,7 +274,6 @@ class DemandeController extends Controller
         } else {
             $demandes = [];
         }
-        // dd($demandes);
         return $demandes;
     }
     private function getReqsHistoric($user)

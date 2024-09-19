@@ -8,12 +8,13 @@ use Illuminate\View\Component;
 
 class Delegations extends Component
 {
+    public $delegations;
     /**
      * Create a new component instance.
      */
-    public function __construct()
+    public function __construct($delegations)
     {
-        //
+        $this->delegations = $delegations;
     }
 
     /**

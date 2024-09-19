@@ -33,7 +33,7 @@
                         <button
                             class="inline-block ease-in transition-all duration-75 p-4 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
                             id="delegations-styled-tab" data-tabs-target="#styled-delegations" type="button"
-                            role="tab" aria-controls="delegations" aria-selected="false">Délégation.</button>
+                            role="tab" aria-controls="delegations" aria-selected="false">Délégation</button>
                     </li>
                     <li class="me-2" role="presentation">
                         <button
@@ -68,7 +68,7 @@
                 <div id="default-styled-tab-content">
                     <x-reqs.ongoing :ongoings="$ongoings" />
                     <x-reqs.collaborators :collaborators="$collaborators" />
-                    <x-reqs.delegations />
+                    <x-reqs.delegations :delegations="$delegations" />
                     <x-reqs.validate :validate="$validate" />
                     <x-reqs.historics :historics="$historics" />
                     <x-reqs.statistics />
@@ -96,14 +96,15 @@
         const statisticsTab = document.getElementById("styled-statistics");
 
         var isManager = `{{ $connected_user->manager }}`
-        var isDelegate =  `{{ $connected_user->delegate }}`
+        var isDelegated =  `{{ $connected_user->delegated }}`
         var isApprover = `{{ $connected_user->approver }}`
 
         if (!isManager) {
             collaboratorsButton.classList.add("hidden")
             collaboratorsTab.classList.add("hidden")
         }
-        if (!isDelegate) {
+
+        if (!isDelegated) {
             delegationsButton.classList.add("hidden")
             delegationsTab.classList.add("hidden")
         }
