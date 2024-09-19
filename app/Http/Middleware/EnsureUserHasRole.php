@@ -22,11 +22,11 @@ class EnsureUserHasRole
 
         $user = Session::get('authUser');
         if(in_array('not-admin', $roles) && $user->compte->role->value === 'admin'){
-            return response()->view('errors.error', ['status_code' => 403], 403);
+            return response()->view('errors.403', [], 403);
         }
         if(in_array($user->compte->role->value , $roles)){
             return $next($request);
         }
-        return response()->view('errors.error', ['status_code' => 403], 403);
+        return response()->view('errors.403', [], 403);
     }
 }
