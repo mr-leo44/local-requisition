@@ -72,11 +72,7 @@ class DemandeController extends Controller
 
     private function isDelegated($user)
     {
-        $isDelegated = User::whereHas('delegations', function (Builder $query) use ($user) {
-            $query->where('user_id', $user->id)->where('date_debut', '<=', Carbon::today())->where('date_fin', '>=', Carbon::today());
-        })->exists();
-
-        if ($isDelegated) {
+        if (Delegation::where('user_id', $user->id)->where('date_debut', '<=', Carbon::today())->where('date_fin', '>=', Carbon::today())->exists()) {
             return true;
         } else {
             return false;
@@ -157,7 +153,7 @@ class DemandeController extends Controller
                     $collabs_req_keys[] = $req->id;
                 }
             }
-            $demandes = Demande::with('demande_details')->whereIn('id', $collabs_req_keys)->latest()->paginate(12);
+            $demandes = Demande::with('demande_details')->whereIn('id', $collabs_req_keys)->latest()->paginate(9);
             foreach ($demandes as $demande) {
                 $last_flow = Traitement::where('demande_id', $demande->id)->get()->last();
                 $details = $demande->demande_details()->get();
@@ -214,7 +210,7 @@ class DemandeController extends Controller
             }
 
             if ($manager->compte->role->value === 'livraison') {
-                $user['deliver'] =true;
+                $user['deliver'] = true;
                 $reqs = Demande::all();
                 $all_validated_keys = [];
                 foreach ($reqs as $key => $req) {
@@ -285,7 +281,7 @@ class DemandeController extends Controller
                     ->where('status', '!=', 'en cours');
             })
                 ->orderBy('created_at', 'desc')
-                ->paginate(12);
+                ->paginate(9);
         }
         if ($user->compte->role->value === 'livraison') {
             $reqs = Demande::all();
@@ -319,7 +315,7 @@ class DemandeController extends Controller
                 }
             }
             $demandes_array = collect($reqs_delivered);
-            $demandes = Demande::with('demande_details')->whereIn('id', $demandes_array->pluck('id'))->orderBy('created_at', 'desc')->paginate(12);
+            $demandes = Demande::with('demande_details')->whereIn('id', $demandes_array->pluck('id'))->orderBy('created_at', 'desc')->paginate(9);
         }
 
         foreach ($demandes as $key => $req) {
