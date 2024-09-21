@@ -16,8 +16,13 @@ class RedirectIfAuthenticated
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Session::get('authUser') !== null) {
-            return redirect()->route('demandes.index');
+        $connected_user = Session::get('authUser');
+        if ($connected_user !== null) {
+            if ($connected_user->compte->role->value === 'admin') {
+                return redirect()->route('users.index');
+            } else {
+                return redirect()->route('demandes.index');
+            }
         } else {
             return $next($request);
         }
