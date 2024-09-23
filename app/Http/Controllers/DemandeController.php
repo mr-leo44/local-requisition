@@ -158,7 +158,7 @@ class DemandeController extends Controller
                 $last_flow = Traitement::where('demande_id', $demande->id)->get()->last();
                 $details = $demande->demande_details()->get();
                 $demande['level'] = $last_flow->level;
-                if ($last_flow->approbateur_id === $user->id) {
+                if ($last_flow && $last_flow->approbateur_id === $user->id) {
                     $demande['validator'] = true;
                 } else {
                     $demande['validator'] = false;
@@ -261,7 +261,7 @@ class DemandeController extends Controller
             foreach ($demandes as $demande) {
                 $last_flow = Traitement::where('demande_id', $demande->id)->where('approbateur_id', $user->id)->get()->last();
                 $demande['level'] = $last_flow->level;
-                if ($last_flow->approbateur_id === $user->id) {
+                if ($last_flow && $last_flow->approbateur_id === $user->id) {
                     $demande['validator'] = true;
                 } else {
                     $demande['validator'] = false;
@@ -277,12 +277,13 @@ class DemandeController extends Controller
         if ($user->compte->role->value === 'user') {
             $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($user) {
                 $query->where('approbateur_id', $user->id)
-                    ->orWhere('demandeur_id', $user->id)
+                    // ->orWhere('demandeur_id', $user->id)
                     ->where('status', '!=', 'en cours');
             })
                 ->orderBy('created_at', 'desc')
                 ->paginate(9);
         }
+
         if ($user->compte->role->value === 'livraison') {
             $reqs = Demande::all();
             $all_validated_keys = [];
@@ -320,6 +321,12 @@ class DemandeController extends Controller
 
         foreach ($demandes as $key => $req) {
             $last_flow = Traitement::where('demande_id', $req->id)->orderBy('id', 'DESC')->first();
+            if ($last_flow->status !== 'en cours' && $last_flow->demandeur_id === $user->id) {
+                $req['validated'] = true;
+            } else {
+                $req['validated'] = false;
+            }
+
             if ($last_flow->status === 'validé') {
                 $details = $req->demande_details()->get();
                 $count = 0;
@@ -339,6 +346,7 @@ class DemandeController extends Controller
                 $req['status'] = 'En cours';
             }
         }
+        // dd($demandes);
         return $demandes;
     }
 
@@ -413,7 +421,6 @@ class DemandeController extends Controller
             ->first();
         $manager = User::find($demande->user->compte->manager);
         $manager_validator = Traitement::where('demande_id', $demande->id)->where('level', 0)->orderBy('id', 'desc')->first();
-        // dd($demande, $manager, $manager_validator);
         if ($manager_validator->approbateur_id === $manager->id) {
             $demande['manager'] = $manager;
         } else {
@@ -422,7 +429,6 @@ class DemandeController extends Controller
         $connected_user = Session::get('authUser');
         if ($connected_user->id === $en_cours->demandeur_id || $connected_user->id === $en_cours->approbateur_id) {
             $approbateurs = Approbateur::orderBy('level', 'ASC')->get()->keyBy('email');
-            // dd($approbateurs);
             $traitements = Traitement::where('demande_id', $demande->id)
                 ->orderBy('level', 'ASC')
                 ->get();
