@@ -41,7 +41,7 @@
                         <div id="validation" class="flex justify-between items-center gap-2">
                             <button id="validateReq" data-modal-target="validate-modal"
                                 data-modal-toggle="validate-modal" data-modal-hide="show-modal" type="button"
-                                class="text-white bg-emerald-700 hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-black-300 font-medium rounded-md text-sm px-5 py-1.5 text-center dark:bg-black-600 dark:hover:bg-black-700 dark:focus:ring-black-800">
+                                class="text-white bg-emerald-700 hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-black-300 font-medium rounded-md text-sm px-5 py-1.5 text-center">
                                 Valider
                             </button>
                             <button id="rejectReq" data-modal-hide="show-modal" data-modal-target="popup-modal"
@@ -89,6 +89,10 @@
             document.querySelector('#deliver').classList.add("hidden")
         }
 
+        if (!req.validator) {
+            document.querySelector('#validation').classList.add("hidden")
+        }
+        
         const details = req.demande_details
 
         document.querySelector('#details_table tbody').textContent = ""
