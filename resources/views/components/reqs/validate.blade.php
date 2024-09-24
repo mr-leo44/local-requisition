@@ -19,15 +19,6 @@
             </button>
         </div>
         <div class="flex justify-between items-center gap-3">
-            <button type="button" @if (Session::get('authUser')->compte->role->value === 'livraison') class="hidden" @endif
-                data-modal-target="authentication-modal" data-modal-toggle="authentication-modal"
-                class="p-2.5 ms-2 ease-in-out transition-all duration-75 text-sm font-medium text-white bg-orange-500 rounded-lg">
-                <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M5 12h14m-7 7V5" />
-                </svg>
-            </button>
             <div>
                 <form class="flex items-center max-w-sm mx-auto">
                     <label for="simple-search" class="sr-only">Search</label>
