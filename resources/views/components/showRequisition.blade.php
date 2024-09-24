@@ -13,13 +13,13 @@
                 <span class="sr-only">Close modal</span>
             </button>
             <div class="p-4 md:p-5">
-                <div class="my-4">
+                <div class="my-4 p-4">
                     <h3 id="title" class="text-xl font-bold text-gray-900 dark:text-white mb-2"></h3>
                     <p id="user" class="font-medium"></p>
                     <p id="service" class="font-medium"></p>
                     <p id="city" class="font-medium"></p>
                 </div>
-                <div class="my-8 rounded dark:bg-gray-700 dark:border-gray-600 p-4">
+                <div class="my-4 overflow-y-auto rounded dark:bg-gray-700 dark:border-gray-600 p-4">
                     <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
                         id="details_table">
                         <thead class="text-xs  uppercase bg-slate-100 dark:bg-transparent text-black dark:text-white">
@@ -37,7 +37,9 @@
                         </thead>
                         <tbody class="bg-white dark:bg-gray-900"></tbody>
                     </table>
-                    <div class="mt-8 flex justify-end items-center">
+                    <div class="mt-5" id="flows"></div>
+
+                    <div class="mt-8 flex justify-end items-center bottom-0 left-0 right-0">
                         <div id="validation" class="flex justify-between items-center gap-2">
                             <button id="validateReq" data-modal-target="validate-modal"
                                 data-modal-toggle="validate-modal" data-modal-hide="show-modal" type="button"
@@ -92,9 +94,9 @@
         if (!req.validator) {
             document.querySelector('#validation').classList.add("hidden")
         }
-        
-        const details = req.demande_details
 
+        const details = req.demande_details
+        const flows = req.flows
         document.querySelector('#details_table tbody').textContent = ""
         document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details))
 
@@ -120,6 +122,63 @@
 
             document.querySelector('#details_table tbody').appendChild(tr)
         });
+
+        //Historique des flow
+        var flowDiv = document.getElementById("flows")
+        document.getElementById("flows").textContent = ""
+        var flowTable = document.createElement('table')
+        flowTable.classList.add("w-full", "text-sm", "text-center", "rtl:text-right", "text-gray-500", "dark:text-gray-400")
+        flowDiv.appendChild(flowTable)
+        var tHead = document.createElement("thead")
+        var tBody = document.createElement("tbody")
+        var headTr = document.createElement("tr")
+        headTr.classList.add("bg-white", "border-b", "dark:bg-gray-800", "dark:border-gray-700", "hover:bg-gray-50", "dark:hover:bg-gray-600")
+        var statusTr = document.createElement("tr")
+        statusTr.classList.add("border-b", "dark:border-gray-700")
+        var dateTr = document.createElement("tr")
+        dateTr.classList.add("border-b", "dark:border-gray-700")
+        tHead.appendChild(headTr)
+        tBody.appendChild(statusTr)
+        tBody.appendChild(dateTr)
+        flows.forEach(flow => {
+            var th = document.createElement("th")
+            th.classList.add("px-6", "py-2")
+            var statusTd = document.createElement("td")
+            statusTd.classList.add("px-6", "py-2", "hover:bg-gray-50", "dark:hover:bg-gray-600")
+            var dateTd = document.createElement("td")
+            dateTd.classList.add("px-6", "py-2", "hover:bg-gray-50", "dark:hover:bg-gray-600")
+            th.textContent = flow.validator
+            headTr.appendChild(th)
+            if (flow.status === 'rejeté') {
+                statusTd.innerHTML= `<svg class="h-6 text-red-600 w-full mx-auto dark:text-red-600" aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path fill-rule="evenodd"
+                                            d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z"
+                                            clip-rule="evenodd" />
+                                    </svg>`
+                dateTd.innerHTML = flow.date
+            } else if(flow.status === 'validé') {
+                statusTd.innerHTML = `<svg class="h-6 text-emerald-600 w-full mx-auto dark:text-emerald-600" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path fill-rule="evenodd"
+                                        d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.793-1.793a1 1 0 0 0-1.414 1.414l2.5 2.5a1 1 0 0 0 1.414 0l4-4Z"
+                                        clip-rule="evenodd" />
+                                </svg>`
+                dateTd.innerHTML = flow.date
+            } else {
+                statusTd.innerHTML=' '
+                dateTd.innerHTML = ' '
+            }
+            statusTr.appendChild(statusTd)
+            dateTr.appendChild(dateTd)
+        })
+        flowTable.appendChild(tHead)
+        flowTable.appendChild(tBody)
+        console.log(flowDiv);
+        
+        
 
         if (req.validator === true) {
             document.querySelector("#validation #validateReq").addEventListener('click', function() {
