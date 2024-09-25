@@ -52,6 +52,15 @@
                                 Rejeter
                             </button>
                         </div>
+                        <div id="generatePdf">
+                            <form action="" method="post">
+                                @csrf
+                                <button type="submit" id="generateButton"
+                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-md text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Générer
+                                    pdf
+                                </button>
+                            </form>
+                        </div>
                         <a data-modal-target="default-modal" id="deliver" data-modal-toggle="default-modal"
                             data-modal-hide="show-modal"
                             class="bg-theme text-sm px-5 py-1.5 rounded ease-in-out transition-all duration-75 text-white">
@@ -95,10 +104,19 @@
             document.querySelector('#validation').classList.add("hidden")
         }
 
+        if (!req.validated) {
+            document.querySelector('#generatePdf').classList.add("hidden")
+        }
+
         const details = req.demande_details
         const flows = req.flows
         document.querySelector('#details_table tbody').textContent = ""
         document.querySelector('#deliver').addEventListener('click', updateDetails(req.demande_details))
+        document.querySelector('#generateButton').addEventListener('click', (event) => {
+            event.preventDefault()
+            generatePdf(req)
+        })
+
 
         // Générer tableau des details
         details.forEach(detail => {
@@ -127,12 +145,14 @@
         var flowDiv = document.getElementById("flows")
         document.getElementById("flows").textContent = ""
         var flowTable = document.createElement('table')
-        flowTable.classList.add("w-full", "text-sm", "text-center", "rtl:text-right", "text-gray-500", "dark:text-gray-400")
+        flowTable.classList.add("w-full", "text-sm", "text-center", "rtl:text-right", "text-gray-500",
+            "dark:text-gray-400")
         flowDiv.appendChild(flowTable)
         var tHead = document.createElement("thead")
         var tBody = document.createElement("tbody")
         var headTr = document.createElement("tr")
-        headTr.classList.add("bg-white", "border-b", "dark:bg-gray-800", "dark:border-gray-700", "hover:bg-gray-50", "dark:hover:bg-gray-600")
+        headTr.classList.add("bg-white", "border-b", "dark:bg-gray-800", "dark:border-gray-700", "hover:bg-gray-50",
+            "dark:hover:bg-gray-600")
         var statusTr = document.createElement("tr")
         statusTr.classList.add("border-b", "dark:border-gray-700")
         var dateTr = document.createElement("tr")
@@ -150,7 +170,7 @@
             th.textContent = flow.validator
             headTr.appendChild(th)
             if (flow.status === 'rejeté') {
-                statusTd.innerHTML= `<svg class="h-6 text-red-600 w-full mx-auto dark:text-red-600" aria-hidden="true"
+                statusTd.innerHTML = `<svg class="h-6 text-red-600 w-full mx-auto dark:text-red-600" aria-hidden="true"
                                         xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
                                         <path fill-rule="evenodd"
@@ -158,7 +178,7 @@
                                             clip-rule="evenodd" />
                                     </svg>`
                 dateTd.innerHTML = flow.date
-            } else if(flow.status === 'validé') {
+            } else if (flow.status === 'validé') {
                 statusTd.innerHTML = `<svg class="h-6 text-emerald-600 w-full mx-auto dark:text-emerald-600" aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                     viewBox="0 0 24 24">
@@ -168,7 +188,7 @@
                                 </svg>`
                 dateTd.innerHTML = flow.date
             } else {
-                statusTd.innerHTML=' '
+                statusTd.innerHTML = ' '
                 dateTd.innerHTML = ' '
             }
             statusTr.appendChild(statusTd)
@@ -176,9 +196,6 @@
         })
         flowTable.appendChild(tHead)
         flowTable.appendChild(tBody)
-        console.log(flowDiv);
-        
-        
 
         if (req.validator === true) {
             document.querySelector("#validation #validateReq").addEventListener('click', function() {
@@ -253,5 +270,14 @@
                 document.querySelector('#deliver-form tbody').appendChild(deliverTr)
             }
         }
+    }
+
+    //génération de pdf
+    function generatePdf(req) {
+        event.preventDefault()
+        const form = event.target.closest('form')
+        const lien = `${req.id}/generatepdf`
+        form.setAttribute('action', lien)
+        form.submit()
     }
 </script>

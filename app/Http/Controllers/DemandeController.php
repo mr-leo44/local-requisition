@@ -300,7 +300,6 @@ class DemandeController extends Controller
         if ($user->compte->role->value === 'user') {
             $demandes = Demande::with('demande_details')->whereHas('traitement', function (Builder $query) use ($user) {
                 $query->where('approbateur_id', $user->id)
-                    // ->orWhere('demandeur_id', $user->id)
                     ->where('status', '!=', 'en cours');
             })
                 ->orderBy('created_at', 'desc')
@@ -347,8 +346,6 @@ class DemandeController extends Controller
             $last_flow = Traitement::where('demande_id', $req->id)->orderBy('id', 'DESC')->first();
             if ($last_flow->status !== 'en cours' && $last_flow->demandeur_id === $user->id) {
                 $req['validated'] = true;
-            } else {
-                $req['validated'] = false;
             }
 
             if ($last_flow->status === 'validé') {
