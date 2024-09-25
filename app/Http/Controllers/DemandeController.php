@@ -42,6 +42,10 @@ class DemandeController extends Controller
             $connected_user['delegated'] = true;
         }
 
+        if ($connected_user->compte->role->value === 'livraison') {
+            $connected_user['deliver'] = true;
+        }
+
         $ongoings = $this->getOngoingReqs($connected_user);
         $collaborators = $this->getCollaboratorsReqs($connected_user);
         $delegations = $this->getDelegationsReqs($connected_user);
@@ -118,7 +122,6 @@ class DemandeController extends Controller
         }
 
         if ($user->compte->role->value === 'livraison') {
-            $user['deliver'] = true;
             $demandes = Demande::all();
             $all_validated_keys = [];
             foreach ($demandes as $key => $req) {
